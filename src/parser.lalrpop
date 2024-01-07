@@ -1,0 +1,44 @@
+use std::rc::Rc;
+use crate::ast::{Ast, Name};
+
+grammar;
+
+pub Type: Ast = {
+    <ArrowType>,
+    <Pi>,
+    <Let>,
+    <Lambda>,
+    <Ann>,
+}
+
+Ann: Ast = "{" <v:Type> ":" <t:Type> "}" => Ast::Ann(Box::new(v), Box::new(t));
+Lambda: Ast = "λ" <i:Ident> "." <t:Type> => Ast::Lambda(i, Box::new(t));
+Let: Ast = "let" <i:Ident> ":" <t:Type> "=" <v:Type> "in" <n:Type> => Ast::Let(i, Box::new(t), Box::new(v), Box::new(n));
+Pi: Ast = "(" <i:Ident> ":" <t:Type> ")" "→" <b:Type> => Ast::Pi(i, Box::new(t), Box::new(b));
+
+ArrowType: Ast = {
+    #[precedence(level="0")]
+    <Application>,
+    #[precedence(level="1")] #[assoc(side="right")]
+    <l:ArrowType> "→" <r:ArrowType> => Ast::Pi(Rc::new(String::from("_")), Box::new(l), Box::new(r)),
+}
+
+Application: Ast = {
+    <SubPrimary>,
+    <fun:Application> <arg:SubPrimary> => Ast::Application(Box::new(fun), Box::new(arg))
+}
+
+SubPrimary: Ast = {
+    <Primary>,
+    "(" <e:Type> ")" => e,
+}
+
+Primary: Ast = {
+    <TType>,
+    <Variable>,
+}
+
+Variable: Ast = <s:Ident> => Ast::Variable(s);
+TType: Ast = "Type" => Ast::Type;
+
+Ident: Name = <s:r"[a-zA-Z]+"> => Rc::new(String::from(s));

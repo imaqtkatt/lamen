@@ -1,0 +1,8 @@
+let Nat : Type =
+  (Nat : Type)
+  → (succ : Nat → Nat)
+  → (zero : Nat)
+  → Nat
+in
+let two : Nat = λN. λs. λz. s (s z) in
+{ two : Nat }
