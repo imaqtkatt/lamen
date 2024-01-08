@@ -23,4 +23,14 @@ in
 
 let box_nat_two : Box Nat = new_box Nat two in
 
-{ id (Box Nat) box_nat_two : Box Nat }
+let Eq : (T : Type) → (A : T) → (B : T) → Type =
+  λT. λA. λB. (eq : (T : Type) → (A : T) → (B : T) → Type)
+  → (rfl : eq T A B)
+  → eq T A B
+in
+
+let refl : (T : Type) → (A : T) → Eq T A A =
+  λT. λA. λB. λrefl. refl
+in
+
+{ refl Nat zero : Eq Nat zero zero }

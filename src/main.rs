@@ -219,11 +219,21 @@ impl Ast {
                 ctx.insert(x.clone(), *a.clone());
                 t.check(b(Value::Variable(fresh)), &env, ctx)
             }
-            (Ast::Let(..), ..) => todo!(),
+            (Ast::Let(bind, typ, value, next), a) => {
+                typ.check(Value::Type, env, ctx.clone());
+                let typ_ = typ.clone().eval(env.clone());
+                value.check(typ_.clone(), env, ctx.clone());
+                let mut env = env.clone();
+                let mut ctx = ctx.clone();
+                let t = value.clone().eval(env.clone());
+                env.insert(bind.clone(), t);
+                ctx.insert(bind.clone(), typ_);
+                next.check(a, &env, ctx)
+            }
             (t, u) => {
                 let tt = t.clone().infer(env, ctx);
                 if !conv(env, tt.clone(), u.clone()) {
-                    panic!("type mismatch, expected {u:?} but got {tt:?}")
+                    panic!("type mismatch, expected {} but got {}", u.quote(env), tt.quote(env))
                 } else {
                     tt
                 }
@@ -239,7 +249,7 @@ impl Ast {
         match self {
             Ast::Variable(x) => match ctx.get(&x) {
                 Some(t) => t.clone(),
-                None => panic!("Name not in scope: {x}"),
+                None => panic!("Unbound variable '{x}'."),
             },
             Ast::Lambda(_x, _t) => panic!("Can't infer lambda."),
             Ast::Application(t, u) => {
@@ -250,21 +260,21 @@ impl Ast {
                         return b(u.eval(env.clone()));
                     }
                     other => {
-                        panic!("Expected a function type, but got: {other:?}")
+                        panic!("Expected a function type, but got: '{other:?}'.")
                     }
                 }
             }
-            Ast::Pi(x, a, b) => {
-                a.check(Value::Type, env, ctx.clone());
+            Ast::Pi(x, typ, body) => {
+                typ.check(Value::Type, env, ctx.clone());
                 let mut env = env.clone();
                 let mut ctx = ctx.clone();
                 env.insert(x.clone(), Value::Variable(x.clone()));
-                ctx.insert(x.clone(), a.eval(env.clone()));
-                b.check(Value::Type, &env, ctx);
+                ctx.insert(x.clone(), typ.eval(env.clone()));
+                body.check(Value::Type, &env, ctx);
                 VType::Type
             }
-            Ast::Ann(x, t) => {
-                x.check(t.eval(env.clone()), env, ctx);
+            Ast::Ann(value, t) => {
+                value.check(t.eval(env.clone()), env, ctx);
                 VType::Type
             }
             Ast::Let(bind, t, value, next) => {
