@@ -4,5 +4,23 @@ let Nat : Type =
   → (zero : Nat)
   → Nat
 in
-let two : Nat = λN. λs. λz. s (s z) in
-{ two : Nat }
+
+let zero : Nat = λN. λs. λz. z in
+let one  : Nat = λN. λs. λz. s z in
+let two  : Nat = λN. λs. λz. s (s z) in
+
+let Box : (t : Type) → Type =
+  λt. (box : (t : Type) → Type)
+  → (new : t → box t)
+  → box t
+in
+
+let id : (A : Type) → A → A = λA. λx. x in
+
+let new_box : (T : Type) → T → Box T =
+  λT. λx. λBox. λnew. new x
+in
+
+let box_nat_two : Box Nat = new_box Nat two in
+
+{ id (Box Nat) box_nat_two : Box Nat }

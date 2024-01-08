@@ -290,7 +290,7 @@ fn main() {
 
     lalrpop_mod!(pub parser);
 
-    let s = std::fs::read_to_string("./main.lamen").unwrap();
+    let s = std::fs::read_to_string("./test.lamen").unwrap();
     match parser::TypeParser::new().parse(&s) {
         Ok(e) => {
             let env = HashMap::new();
@@ -298,7 +298,7 @@ fn main() {
             let inferred = e.infer(&env, ctx);
             let quoted = inferred.quote(&env);
 
-            println!("quoted: {quoted}")
+            println!("ok, quoted: {quoted}")
         }
         Err(e) => println!("{e:?}"),
     }

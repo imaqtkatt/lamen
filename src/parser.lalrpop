@@ -41,4 +41,4 @@ Primary: Ast = {
 Variable: Ast = <s:Ident> => Ast::Variable(s);
 TType: Ast = "Type" => Ast::Type;
 
-Ident: Name = <s:r"[a-zA-Z]+"> => Rc::new(String::from(s));
+Ident: Name = <s:r"[a-zA-Z_]+"> => Rc::new(String::from(s));
